@@ -22,7 +22,7 @@ header {
   background-color: #2b2b2b;
   border-radius: 10px;
   padding: 30px;
-  width: 800px;
+  width: 850px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -75,13 +75,27 @@ button {
   background-color: #007b4a;
 }
 
-.chart-container {
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.chart-card {
   background-color: white;
-  padding: 15px;
+  color: black;
   border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 0 10px #0004;
+}
+
+.chart-card h3 {
+  text-align: center;
+  margin-bottom: 8px;
 }
 
 #status {
   text-align: center;
   font-style: italic;
+  color: #ccc;
 }

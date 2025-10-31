@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <title>Kundt Project</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="{{ url_for('static', filename='chart.min.js') }}"></script>
+
 </head>
 <body>
   <header>
@@ -15,7 +16,7 @@
     <form id="soundForm">
       <div class="input-row">
         <label>Frecuencia 1 (Hz):</label>
-        <input type="number" id="f1" value="440" min="0" max="20000">
+        <input type="number" id="f1" value="440" min="20" max="20000">
         <label>Fase 1 (°):</label>
         <input type="number" id="p1" value="0">
         <button type="button" class="play-btn" data-mode="onda1">Onda 1</button>
@@ -23,7 +24,7 @@
 
       <div class="input-row">
         <label>Frecuencia 2 (Hz):</label>
-        <input type="number" id="f2" value="440" min="0" max="20000">
+        <input type="number" id="f2" value="440" min="20" max="20000">
         <label>Fase 2 (°):</label>
         <input type="number" id="p2" value="180">
         <button type="button" class="play-btn" data-mode="onda2">Onda 2</button>
@@ -33,28 +34,39 @@
       <p id="status"></p>
     </form>
 
-    <div class="chart-container">
-      <canvas id="waveChart"></canvas>
+    <!-- Tres gráficos separados -->
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Onda 1</h3>
+        <canvas id="wave1Chart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Onda 2</h3>
+        <canvas id="wave2Chart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Mezcla</h3>
+        <canvas id="mixedChart"></canvas>
+      </div>
     </div>
   </main>
 
   <script>
-    const ctx = document.getElementById("waveChart").getContext("2d");
-    const chart = new Chart(ctx, {
+    const configBase = (color, label) => ({
       type: "line",
-      data: {
-        labels: [],
-        datasets: [
-          { label: "Onda 1", borderColor: "red", data: [], borderWidth: 1, pointRadius: 0 },
-          { label: "Onda 2", borderColor: "green", data: [], borderWidth: 1, pointRadius: 0 },
-          { label: "Mezcla", borderColor: "blue", data: [], borderWidth: 1, pointRadius: 0 }
-        ]
-      },
+      data: { labels: [], datasets: [{ label, borderColor: color, data: [], borderWidth: 1, pointRadius: 0 }] },
       options: {
         animation: false,
-        scales: { y: { min: -1, max: 1 } }
-      }
+        scales: { y: { min: -1, max: 1 }, x: { display: false } },
+        plugins: { legend: { display: false } },
+      },
     });
+
+    const charts = {
+      wave1: new Chart(document.getElementById("wave1Chart"), configBase("red", "Onda 1")),
+      wave2: new Chart(document.getElementById("wave2Chart"), configBase("green", "Onda 2")),
+      mixed: new Chart(document.getElementById("mixedChart"), configBase("blue", "Mezcla")),
+    };
 
     const statusText = document.getElementById("status");
 
@@ -70,12 +82,15 @@
         const res = await fetch("/play", { method: "POST", body: formData });
         const data = await res.json();
 
-        chart.data.labels = data.time;
-        chart.data.datasets[0].data = data.wave1;
-        chart.data.datasets[1].data = data.wave2;
-        chart.data.datasets[2].data = data.mixed;
-        chart.update();
+        charts.wave1.data.labels = data.time;
+        charts.wave2.data.labels = data.time;
+        charts.mixed.data.labels = data.time;
 
+        charts.wave1.data.datasets[0].data = data.wave1;
+        charts.wave2.data.datasets[0].data = data.wave2;
+        charts.mixed.data.datasets[0].data = data.mixed;
+
+        Object.values(charts).forEach(c => c.update());
         statusText.textContent = "Listo ✅";
       } catch (err) {
         statusText.textContent = "Error: " + err.message;

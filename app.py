@@ -1,5 +1,4 @@
 """
-Debido a tiempos de entrega y del objetivo real del proyecto, este codigo a sigo generado en mayor medida por ChatGPT
 """
 import numpy as np
 import pyaudio
