@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Kundt Project</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Kundt Project</h1>
+  </header>
+
+  <main class="container">
+    <form id="soundForm">
+      <div class="input-row">
+        <label>Frecuencia 1 (Hz):</label>
+        <input type="number" id="f1" value="440" min="0" max="20000">
+        <label>Fase 1 (°):</label>
+        <input type="number" id="p1" value="0">
+        <button type="button" class="play-btn" data-mode="onda1">Onda 1</button>
+      </div>
+
+      <div class="input-row">
+        <label>Frecuencia 2 (Hz):</label>
+        <input type="number" id="f2" value="440" min="0" max="20000">
+        <label>Fase 2 (°):</label>
+        <input type="number" id="p2" value="180">
+        <button type="button" class="play-btn" data-mode="onda2">Onda 2</button>
+      </div>
+
+      <button type="button" id="mixBtn" class="main-btn">Reproducir mezcla</button>
+      <p id="status"></p>
+    </form>
+
+    <div class="chart-container">
+      <canvas id="waveChart"></canvas>
+    </div>
+  </main>
+
+  <script>
+    const ctx = document.getElementById("waveChart").getContext("2d");
+    const chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [
+          { label: "Onda 1", borderColor: "red", data: [], borderWidth: 1, pointRadius: 0 },
+          { label: "Onda 2", borderColor: "green", data: [], borderWidth: 1, pointRadius: 0 },
+          { label: "Mezcla", borderColor: "blue", data: [], borderWidth: 1, pointRadius: 0 }
+        ]
+      },
+      options: {
+        animation: false,
+        scales: { y: { min: -1, max: 1 } }
+      }
+    });
+
+    const statusText = document.getElementById("status");
+
+    async function reproducir(modo) {
+      statusText.textContent = "Reproduciendo...";
+      const f1 = document.getElementById("f1").value;
+      const f2 = document.getElementById("f2").value;
+      const p1 = document.getElementById("p1").value;
+      const p2 = document.getElementById("p2").value;
+      const formData = new URLSearchParams({ f1, f2, p1, p2, modo });
+
+      try {
+        const res = await fetch("/play", { method: "POST", body: formData });
+        const data = await res.json();
+
+        chart.data.labels = data.time;
+        chart.data.datasets[0].data = data.wave1;
+        chart.data.datasets[1].data = data.wave2;
+        chart.data.datasets[2].data = data.mixed;
+        chart.update();
+
+        statusText.textContent = "Listo ✅";
+      } catch (err) {
+        statusText.textContent = "Error: " + err.message;
+      }
+    }
+
+    document.querySelectorAll(".play-btn").forEach(btn =>
+      btn.addEventListener("click", () => reproducir(btn.dataset.mode))
+    );
+
+    document.getElementById("mixBtn").addEventListener("click", () => reproducir("mezcla"));
+  </script>
+</body>
+</html>
