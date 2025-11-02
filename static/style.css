@@ -1,101 +1,119 @@
 * {
-  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: "Segoe UI", Tahoma, sans-serif;
+  box-sizing: border-box;
+  font-family: system-ui, sans-serif;
 }
 
 body {
-  background-color: #1e1e1e;
-  color: #eee;
+  background-color: #1f1f1f;
+  color: #e5e5e5;
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 20px;
 }
 
 header {
   text-align: center;
-  margin: 30px 0 10px;
+  margin-bottom: 20px;
 }
 
-.container {
-  background-color: #2b2b2b;
-  border-radius: 10px;
-  padding: 30px;
-  width: 850px;
+h1 {
+  font-size: 1.8rem;
+  color: #fff;
+}
+
+.main-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  box-shadow: 0 0 10px #0008;
+  gap: 15px;
+  width: 90%;
+  max-width: 900px;
 }
 
-.input-row {
+/* Bloques de ondas */
+.wave-block {
   display: flex;
-  justify-content: space-between;
+  flex-direction: row;
   align-items: center;
-  background-color: #383838;
-  padding: 15px;
+  justify-content: space-between;
+  background-color: #2b2b2b;
+  border: 2px solid #333;
   border-radius: 8px;
+  padding: 10px;
   gap: 10px;
 }
 
-.input-row input {
-  width: 100px;
-  padding: 8px;
-  border-radius: 5px;
-  border: none;
-  text-align: center;
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 150px;
 }
 
-button {
-  cursor: pointer;
+.controls label {
+  font-size: 0.9rem;
+}
+
+.controls input {
+  width: 100%;
+  height: 30px;
+  text-align: center;
+  background: #444;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+}
+
+.btn {
+  width: 100%;
+  height: 35px;
   border: none;
   border-radius: 6px;
-  padding: 10px 18px;
   font-weight: bold;
-  color: white;
-  transition: 0.2s;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
-.play-btn {
-  background-color: #007bff;
+.btn.blue { background: #3b82f6; }
+.btn.blue:hover { background: #2563eb; }
+
+.btn.green { background: #22c55e; }
+.btn.green:hover { background: #16a34a; }
+
+.btn.red { background: #ef4444; }
+.btn.red:hover { background: #dc2626; }
+
+.graph {
+  flex: 1;
+  background-color: #111;
+  border: 1px dashed #555;
+  border-radius: 6px;
+  height: 160px;
+  position: relative;
 }
 
-.play-btn:hover {
-  background-color: #005fcc;
+.graph-full {
+  background-color: #111;
+  border: 2px solid #444;
+  border-radius: 6px;
+  width: 100%;
+  height: 200px;
+  position: relative;
 }
 
-.main-btn {
-  background-color: #00a86b;
-  width: fit-content;
-  align-self: center;
+.graph canvas,
+.graph-full canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
 }
 
-.main-btn:hover {
-  background-color: #007b4a;
-}
-
-.chart-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
-}
-
-.chart-card {
-  background-color: white;
-  color: black;
-  border-radius: 8px;
-  padding: 15px;
-  box-shadow: 0 0 10px #0004;
-}
-
-.chart-card h3 {
+/* Control mezcla */
+.mix-control {
   text-align: center;
-  margin-bottom: 8px;
-}
-
-#status {
-  text-align: center;
-  font-style: italic;
-  color: #ccc;
+  margin: 15px 0;
 }

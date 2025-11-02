@@ -5,103 +5,175 @@
   <title>Kundt Project</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <script src="{{ url_for('static', filename='chart.min.js') }}"></script>
-
 </head>
 <body>
   <header>
     <h1>Kundt Project</h1>
   </header>
 
-  <main class="container">
-    <form id="soundForm">
-      <div class="input-row">
-        <label>Frecuencia 1 (Hz):</label>
-        <input type="number" id="f1" value="440" min="20" max="20000">
-        <label>Fase 1 (°):</label>
-        <input type="number" id="p1" value="0">
-        <button type="button" class="play-btn" data-mode="onda1">Onda 1</button>
+  <main class="main-container">
+    <!-- Duración general -->
+    <div class="wave-block">
+      <div class="controls">
+        <label>Duración (s)</label>
+        <input type="number" id="duracion" value="5" min="1" max="20" step="0.1">
       </div>
+    </div>
 
-      <div class="input-row">
-        <label>Frecuencia 2 (Hz):</label>
-        <input type="number" id="f2" value="440" min="20" max="20000">
-        <label>Fase 2 (°):</label>
-        <input type="number" id="p2" value="180">
-        <button type="button" class="play-btn" data-mode="onda2">Onda 2</button>
-      </div>
+    <!-- Bloque Onda 1 -->
+    <div class="wave-block">
+      <div class="controls">
+        <label>Frecuencia 1 (Hz)</label>
+        <input type="number" id="freq1" value="170" min="0" max="20000" step="1">
 
-      <button type="button" id="mixBtn" class="main-btn">Reproducir mezcla</button>
-      <p id="status"></p>
-    </form>
+        <label>Fase 1 (°)</label>
+        <input type="number" id="phase1" value="180" min="0" max="360" step="1">
 
-    <!-- Tres gráficos separados -->
-    <div class="chart-grid">
-      <div class="chart-card">
-        <h3>Onda 1</h3>
-        <canvas id="wave1Chart"></canvas>
+        <button id="play1" class="btn blue">Play</button>
       </div>
-      <div class="chart-card">
-        <h3>Onda 2</h3>
-        <canvas id="wave2Chart"></canvas>
+      <div class="graph">
+        <canvas id="chart1"></canvas>
       </div>
-      <div class="chart-card">
-        <h3>Mezcla</h3>
-        <canvas id="mixedChart"></canvas>
+    </div>
+
+    <!-- Bloque Onda 2 -->
+    <div class="wave-block">
+      <div class="controls">
+        <label>Frecuencia 2 (Hz)</label>
+        <input type="number" id="freq2" value="170" min="0" max="20000" step="1">
+
+        <label>Fase 2 (°)</label>
+        <input type="number" id="phase2" value="0" min="0" max="360" step="1">
+
+        <button id="play2" class="btn green">Play</button>
       </div>
+      <div class="graph">
+        <canvas id="chart2"></canvas>
+      </div>
+    </div>
+
+    <!-- Control de mezcla -->
+    <div class="mix-control">
+      <button id="playMix" class="btn red">Reproducir mezcla</button>
+    </div>
+
+    <!-- Gráfica de mezcla -->
+    <div class="graph-full">
+      <canvas id="chartMix"></canvas>
     </div>
   </main>
 
   <script>
-    const configBase = (color, label) => ({
-      type: "line",
-      data: { labels: [], datasets: [{ label, borderColor: color, data: [], borderWidth: 1, pointRadius: 0 }] },
-      options: {
-        animation: false,
-        scales: { y: { min: -1, max: 1 }, x: { display: false } },
-        plugins: { legend: { display: false } },
-      },
-    });
-
-    const charts = {
-      wave1: new Chart(document.getElementById("wave1Chart"), configBase("red", "Onda 1")),
-      wave2: new Chart(document.getElementById("wave2Chart"), configBase("green", "Onda 2")),
-      mixed: new Chart(document.getElementById("mixedChart"), configBase("blue", "Mezcla")),
-    };
-
-    const statusText = document.getElementById("status");
-
-    async function reproducir(modo) {
-      statusText.textContent = "Reproduciendo...";
-      const f1 = document.getElementById("f1").value;
-      const f2 = document.getElementById("f2").value;
-      const p1 = document.getElementById("p1").value;
-      const p2 = document.getElementById("p2").value;
-      const formData = new URLSearchParams({ f1, f2, p1, p2, modo });
-
-      try {
-        const res = await fetch("/play", { method: "POST", body: formData });
-        const data = await res.json();
-
-        charts.wave1.data.labels = data.time;
-        charts.wave2.data.labels = data.time;
-        charts.mixed.data.labels = data.time;
-
-        charts.wave1.data.datasets[0].data = data.wave1;
-        charts.wave2.data.datasets[0].data = data.wave2;
-        charts.mixed.data.datasets[0].data = data.mixed;
-
-        Object.values(charts).forEach(c => c.update());
-        statusText.textContent = "Listo ✅";
-      } catch (err) {
-        statusText.textContent = "Error: " + err.message;
-      }
+    // Crear gráficos ---------------------------------------------------
+    function createChart(ctx, color) {
+      return new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: [],
+          datasets: [{
+            data: [],
+            borderColor: color,
+            borderWidth: 1.5,
+            pointRadius: 0,
+            tension: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          scales: {
+            x: { display: false },
+            y: { min: -1.1, max: 1.1 }
+          },
+          plugins: { legend: { display: false } }
+        }
+      });
     }
 
-    document.querySelectorAll(".play-btn").forEach(btn =>
-      btn.addEventListener("click", () => reproducir(btn.dataset.mode))
-    );
+    const chart1 = createChart(document.getElementById('chart1'), "#3b82f6");
+    const chart2 = createChart(document.getElementById('chart2'), "#22c55e");
+    const chartMix = createChart(document.getElementById('chartMix'), "#ef4444");
 
-    document.getElementById("mixBtn").addEventListener("click", () => reproducir("mezcla"));
+    // Generador de onda -------------------------------------------------
+    function generarOnda(freq, phaseDeg, duration) {
+      const fs = 44100;
+      const t = Array.from({ length: fs * duration }, (_, i) => i / fs);
+      const phase = phaseDeg * Math.PI / 180;
+      const y = t.map(tt => Math.sin(2 * Math.PI * freq * tt + phase));
+      return { t, y };
+    }
+
+    // Actualizar gráfico -----------------------------------------------
+    function actualizarGrafico(chart, data) {
+      chart.data.labels = data.t.slice(0, 500);
+      chart.data.datasets[0].data = data.y.slice(0, 500);
+      chart.update();
+    }
+
+    // Reproducir sonido ------------------------------------------------
+    function reproducirOnda(freq, phaseDeg, duration) {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      oscillator.type = 'sine';
+      oscillator.frequency.value = freq;
+      gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + duration);
+    }
+
+    // Eventos individuales ---------------------------------------------
+    document.getElementById("play1").onclick = () => {
+      const f = parseFloat(document.getElementById("freq1").value);
+      const p = parseFloat(document.getElementById("phase1").value);
+      const dur = parseFloat(document.getElementById("duracion").value);
+      const onda = generarOnda(f, p, dur);
+      actualizarGrafico(chart1, onda);
+      reproducirOnda(f, p, dur);
+    };
+
+    document.getElementById("play2").onclick = () => {
+      const f = parseFloat(document.getElementById("freq2").value);
+      const p = parseFloat(document.getElementById("phase2").value);
+      const dur = parseFloat(document.getElementById("duracion").value);
+      const onda = generarOnda(f, p, dur);
+      actualizarGrafico(chart2, onda);
+      reproducirOnda(f, p, dur);
+    };
+
+    // Mezcla ------------------------------------------------------------
+    document.getElementById("playMix").onclick = () => {
+      const f1 = parseFloat(document.getElementById("freq1").value);
+      const p1 = parseFloat(document.getElementById("phase1").value);
+      const f2 = parseFloat(document.getElementById("freq2").value);
+      const p2 = parseFloat(document.getElementById("phase2").value);
+      const dur = parseFloat(document.getElementById("duracion").value);
+
+      const fs = 44100;
+      const t = Array.from({ length: fs * dur }, (_, i) => i / fs);
+      const y1 = t.map(tt => Math.sin(2 * Math.PI * f1 * tt + p1 * Math.PI / 180));
+      const y2 = t.map(tt => Math.sin(2 * Math.PI * f2 * tt + p2 * Math.PI / 180));
+      const yMix = y1.map((v, i) => (v + y2[i]) / 2);
+
+      actualizarGrafico(chartMix, { t, y: yMix });
+
+      // Reproducción de mezcla
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const buffer = audioCtx.createBuffer(1, yMix.length, fs);
+      const channelData = buffer.getChannelData(0);
+      for (let i = 0; i < yMix.length; i++) channelData[i] = yMix[i] * 0.2;
+
+      const source = audioCtx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(audioCtx.destination);
+      source.start();
+    };
   </script>
 </body>
 </html>
